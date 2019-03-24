@@ -7,3 +7,12 @@ C:\Users\SkynetDevCode\Desktop\UACBypass\UACBypass\obj\Debug\UACBypass.exe
 C:\Users\SkynetDevCode\Desktop\UACBypass\UACBypass\obj\Debug\UACBypass.pdb
 C:\Users\SkynetDevCode\Desktop\UACBypass\UACBypass\obj\Debug\UACBypass.Properties.Resources.resources
 C:\Users\SkynetDevCode\Desktop\UACBypass\UACBypass\obj\Debug\UACBypass.csproj.GenerateResource.cache
+D:\C#\UACBypass\UACBypass\bin\Debug\UACBypass.exe.config
+D:\C#\UACBypass\UACBypass\bin\Debug\UACBypass.exe
+D:\C#\UACBypass\UACBypass\bin\Debug\UACBypass.pdb
+D:\C#\UACBypass\UACBypass\obj\Debug\UACBypass.csprojAssemblyReference.cache
+D:\C#\UACBypass\UACBypass\obj\Debug\UACBypass.Properties.Resources.resources
+D:\C#\UACBypass\UACBypass\obj\Debug\UACBypass.csproj.GenerateResource.cache
+D:\C#\UACBypass\UACBypass\obj\Debug\UACBypass.csproj.CoreCompileInputs.cache
+D:\C#\UACBypass\UACBypass\obj\Debug\UACBypass.exe
+D:\C#\UACBypass\UACBypass\obj\Debug\UACBypass.pdb

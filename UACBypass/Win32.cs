@@ -48,5 +48,37 @@ namespace UACBypass
             WindowsIdentity id = WindowsIdentity.GetCurrent();
             return id.IsSystem;
         }
+
+        /// <summary>
+        /// The function check if the given fileName exists.
+        /// </summary>
+        /// <returns>
+        /// Returns true if the fileName exists
+        /// </returns>
+        public static bool ExistsOnPath(string fileName)
+        {
+            return GetFullPath(fileName) != null;
+        }
+
+        /// <summary>
+        /// The function provide the full path of a given fileName.
+        /// </summary>
+        /// <returns>
+        /// Returns a string that represents the full path the given fileName.
+        /// </returns>
+        public static string GetFullPath(string fileName)
+        {
+            if (File.Exists(fileName))
+                return Path.GetFullPath(fileName);
+
+            var values = Environment.GetEnvironmentVariable("PATH");
+            foreach (var path in values.Split(';'))
+            {
+                var fullPath = Path.Combine(path, fileName);
+                if (File.Exists(fullPath))
+                    return fullPath;
+            }
+            return null;
+        }
     }
 }
