@@ -20,4 +20,4 @@ As soon as the program has been restarted with admin rights, it will try to grab
 The program will try to restart the trusted service installer to be able to run the software with the same rights as it.
 
 TrustedInstaller is the program with the most privileges on the system.
-If it can't start it, it will elevate it with winlogon.
+If it can't start it, it will elevate the program using winlogon.
