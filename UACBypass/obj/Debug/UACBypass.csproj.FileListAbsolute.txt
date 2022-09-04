@@ -16,3 +16,13 @@ D:\C#\UACBypass\UACBypass\obj\Debug\UACBypass.csproj.GenerateResource.cache
 D:\C#\UACBypass\UACBypass\obj\Debug\UACBypass.csproj.CoreCompileInputs.cache
 D:\C#\UACBypass\UACBypass\obj\Debug\UACBypass.exe
 D:\C#\UACBypass\UACBypass\obj\Debug\UACBypass.pdb
+C:\Users\regiolis\Documents\Visual Studio 2019\UACBypass\UACBypass\bin\Debug\UACBypass.exe.config
+C:\Users\regiolis\Documents\Visual Studio 2019\UACBypass\UACBypass\bin\Debug\UACBypass.exe
+C:\Users\regiolis\Documents\Visual Studio 2019\UACBypass\UACBypass\bin\Debug\UACBypass.pdb
+C:\Users\regiolis\Documents\Visual Studio 2019\UACBypass\UACBypass\obj\Debug\UACBypass.csproj.AssemblyReference.cache
+C:\Users\regiolis\Documents\Visual Studio 2019\UACBypass\UACBypass\obj\Debug\UACBypass.Properties.Resources.resources
+C:\Users\regiolis\Documents\Visual Studio 2019\UACBypass\UACBypass\obj\Debug\UACBypass.csproj.GenerateResource.cache
+C:\Users\regiolis\Documents\Visual Studio 2019\UACBypass\UACBypass\obj\Debug\UACBypass.csproj.CoreCompileInputs.cache
+C:\Users\regiolis\Documents\Visual Studio 2019\UACBypass\UACBypass\obj\Debug\UACBypass.exe
+C:\Users\regiolis\Documents\Visual Studio 2019\UACBypass\UACBypass\obj\Debug\UACBypass.pdb
+C:\Users\regiolis\Documents\Visual Studio 2019\UACBypass\UACBypass\obj\Debug\UACBypass.csproj.SuggestedBindingRedirects.cache

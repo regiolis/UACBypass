@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -107,7 +108,7 @@ namespace UACBypass
             {
                 if (Environment.OSVersion.Platform != PlatformID.Win32NT)
                     return false;
-
+                
                 var version = Environment.OSVersion.Version;
 
                 if (version.Major >= TenMajorVersion)
