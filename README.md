@@ -11,7 +11,7 @@ The program creates a registry key HKCU\Software\Classes\ms-settings\Shell\Open\
 It then run the auto-elevated program which will itself launch the program whose path has been written in the registry with the same privileges.
 As soon as the program has been run with admin rights it deletes the registry key that was created at the risk of causing errors when opening MMC components.
 
-This method only works on an account with administrator privileges. It will not work on a standard user account. Since Windows Vista by default each program is executed with user privileges even if the user has administrator rights on the machine.
+This method only works on an account with administrator privileges. It won't work on a standard user account. Since Windows Vista by default each program is executed with user privileges even if the user has administrator rights on the machine.
 
 UAC should not be configured with the most restrictive settings : "Always notify me when". The program makes sure this is not the case by checking the ConsentPromptBehaviorAdmin value in the registry HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System.
 
