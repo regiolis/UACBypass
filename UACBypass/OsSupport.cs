@@ -12,14 +12,6 @@ namespace UACBypass
     /// </summary>
     public static class OsSupport
     {
-
-        private const int VistaMajorVersion = 6;
-        private const int SevenMinorVersion = 1;
-        private const int EightMinorVersion = 2;
-        private const int EightDotOneMinorVersion = 3;
-        private const int TenMajorVersion = 10;
-        private const int TenAnniversaryBuild = 14393;
-
         /// <summary>
         /// Gets whether the running operating system is Windows Vista or a more recent
         /// version.
@@ -28,8 +20,8 @@ namespace UACBypass
         {
             get
             {
-                return (Environment.OSVersion.Platform == PlatformID.Win32NT &&
-                        Environment.OSVersion.Version.Major >= VistaMajorVersion);
+                return Environment.OSVersion.Platform == PlatformID.Win32NT &&
+                       Environment.OSVersion.Version.Major >= 6;
             }
         }
 
@@ -41,16 +33,8 @@ namespace UACBypass
         {
             get
             {
-                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-                    return false;
-
-                var version = Environment.OSVersion.Version;
-                if (version.Major > VistaMajorVersion)
-                    return true;
-                else if (version.Major == VistaMajorVersion)
-                    return (version.Minor >= SevenMinorVersion);
-
-                return false;
+                return Environment.OSVersion.Platform == PlatformID.Win32NT &&
+                       Environment.OSVersion.Version >= new Version(6, 1);
             }
         }
 
@@ -62,17 +46,8 @@ namespace UACBypass
         {
             get
             {
-                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-                    return false;
-
-                var version = Environment.OSVersion.Version;
-
-                if (version.Major > VistaMajorVersion)
-                    return true;
-                else if (version.Major == VistaMajorVersion)
-                    return (version.Minor >= EightMinorVersion);
-
-                return false;
+                return Environment.OSVersion.Platform == PlatformID.Win32NT &&
+                       Environment.OSVersion.Version >= new Version(6, 2, 9200);
             }
         }
 
@@ -84,17 +59,8 @@ namespace UACBypass
         {
             get
             {
-                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-                    return false;
-
-                var version = Environment.OSVersion.Version;
-
-                if (version.Major > VistaMajorVersion)
-                    return true;
-                else if (version.Major == VistaMajorVersion)
-                    return (version.Minor >= EightDotOneMinorVersion);
-
-                return false;
+                return Environment.OSVersion.Platform == PlatformID.Win32NT &&
+                       Environment.OSVersion.Version >= new Version(6, 3);
             }
         }
 
@@ -106,30 +72,34 @@ namespace UACBypass
         {
             get
             {
-                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-                    return false;
-                
-                var version = Environment.OSVersion.Version;
-
-                if (version.Major >= TenMajorVersion)
-                    return true;
-
-                return false;
+                return Environment.OSVersion.Platform == PlatformID.Win32NT &&
+                       Environment.OSVersion.Version >= new Version(10, 0);
             }
         }
 
         /// <summary>
-        /// Gets whether the running operating system is Windows 10 "Anniversary Edition"
+        /// Gets whether the running operating system is Windows 10 "Creators Edition"
         /// or a more recent version.
         /// </summary>
-        public static bool IsTenAnniversaryEditionOrBetter
+        public static bool IsTenCreatorsOrBetter
         {
             get
             {
-                if (!IsTenOrBetter)
-                    return false;
+                return Environment.OSVersion.Platform == PlatformID.Win32NT &&
+                       Environment.OSVersion.Version >= new Version(10, 0, 15063);
+            }
+        }
 
-                return Environment.OSVersion.Version.Build >= TenAnniversaryBuild;
+        /// <summary>
+        /// Gets whether the running operating system is Windows 11
+        /// or a more recent version.
+        /// </summary>
+        public static bool IsElevenOrBetter
+        {
+            get
+            {
+                return Environment.OSVersion.Platform == PlatformID.Win32NT &&
+                       Environment.OSVersion.Version >= new Version(11, 0);
             }
         }
     }

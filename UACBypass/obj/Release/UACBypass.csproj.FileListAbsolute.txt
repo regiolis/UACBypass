@@ -1,0 +1,10 @@
+C:\Users\regiolis\Documents\Git\UACBypass\UACBypass\bin\Release\UACBypass.exe.config
+C:\Users\regiolis\Documents\Git\UACBypass\UACBypass\bin\Release\UACBypass.exe
+C:\Users\regiolis\Documents\Git\UACBypass\UACBypass\bin\Release\UACBypass.pdb
+C:\Users\regiolis\Documents\Git\UACBypass\UACBypass\obj\Release\UACBypass.csproj.AssemblyReference.cache
+C:\Users\regiolis\Documents\Git\UACBypass\UACBypass\obj\Release\UACBypass.csproj.SuggestedBindingRedirects.cache
+C:\Users\regiolis\Documents\Git\UACBypass\UACBypass\obj\Release\UACBypass.Properties.Resources.resources
+C:\Users\regiolis\Documents\Git\UACBypass\UACBypass\obj\Release\UACBypass.csproj.GenerateResource.cache
+C:\Users\regiolis\Documents\Git\UACBypass\UACBypass\obj\Release\UACBypass.csproj.CoreCompileInputs.cache
+C:\Users\regiolis\Documents\Git\UACBypass\UACBypass\obj\Release\UACBypass.exe
+C:\Users\regiolis\Documents\Git\UACBypass\UACBypass\obj\Release\UACBypass.pdb

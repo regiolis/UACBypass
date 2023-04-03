@@ -43,9 +43,7 @@ namespace UACBypass
                     {
                         string fullpath = current_filename != filename ? current_filename + " " + filename : filename;
 
-                        if (OsSupport.IsEightOrBetter)
-                            UAC.BypassUsingComputerDefaults(fullpath);
-                        else UAC.BypassUsingEventViewer(fullpath);
+                        UAC.Bypass(fullpath);
                     }
                 }
                 else if (Privileges.IsRunningAsSystem())
