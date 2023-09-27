@@ -79,7 +79,7 @@ namespace UACBypass
 
         /// <summary>
         /// This method tries to bypass UAC using computerdefault.exe program with Registry Keys manipulations.
-        /// </summary>
+        /// </summary>\
         public static void ComputerDefaults(string command)
         {
             //Set the registry key for fodhelper
