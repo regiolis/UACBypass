@@ -25,7 +25,7 @@ namespace UACBypass
                 }
                 else filename = current_filename;
 
-                Console.Title = "Bypass UAC Program @Régiolis 2022";
+                Console.Title = "Bypass UAC Program @Régiolis 2023";
 
                 UAC.CleanRegistry();
 
